@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Refillon Solutions — Service Desk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg:#E7E4DC;
+    --panel:#FFFDF8;
+    --ink:#252221;
+    --ink-soft:#5B5650;
+    --line:#D8D2C4;
+    --copper:#B5602E;
+    --copper-deep:#8F491F;
+    --teal:#2E6B5E;
+    --amber:#C98A12;
+    --red:#B23B30;
+    --green:#3E7D4B;
+    --purple:#6B4C8A;
+    --blue:#2F5F8A;
+    --yellow:#B8901A;
+    --orange:#C1662B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0px, rgba(0,0,0,0.015) 1px, transparent 1px, transparent 3px);
+    color:var(--ink);
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    padding:0;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+
+  /* Header — service-ticket stub */
+  .ticket-header{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:22px 26px;
+    position:relative;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+    box-shadow:0 1px 0 rgba(0,0,0,0.04);
+  }
+  .ticket-header::before{
+    content:"";
+    position:absolute;
+    left:0;right:0;bottom:-1px;
+    height:0;
+    border-bottom:2px dashed var(--line);
+  }
+  .brand-mark{
+    font-family:'Courier New', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    color:var(--copper-deep);
+    margin-bottom:6px;
+  }
+  h1{
+    margin:0;
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{color:var(--ink-soft);font-size:14px;margin-top:4px;}
+  .today-stamp{
+    text-align:right;
+    font-family:'Courier New', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    border-left:2px solid var(--line);
+    padding-left:16px;
+  }
+
+  /* Stats strip */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    margin-top:16px;
+  }
+  .stat{
+    background:var(--panel);
+    padding:14px 16px;
+  }
+  .stat .num{font-size:24px;font-weight:700;color:var(--copper-deep);}
+  .stat .lbl{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin:22px 0 14px;
+  }
+  select,input[type=text],input[type=tel],input[type=date],input[type=number],textarea{
+    font-family:inherit;
+    font-size:13.5px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:var(--panel);
+    color:var(--ink);
+  }
+  .search{flex:1;min-width:160px;}
+  button{
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 16px;
+    border-radius:3px;
+    border:1px solid transparent;
+    cursor:pointer;
+    background:var(--copper);
+    color:#fff;
+    transition:filter .12s;
+  }
+  button:hover{filter:brightness(1.08);}
+  button.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+  }
+  button.small{padding:5px 10px;font-size:12px;}
+  button.danger{background:var(--red);}
+  button.subtle{background:var(--teal);}
+
+  /* Board */
+  .board{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:14px;
+  }
+  .col{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:60px;
+  }
+  .col-head{
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    font-weight:700;
+    font-size:13.5px;
+  }
+  .col-head .count{
+    font-family:'Courier New', monospace;
+    font-size:12px;
+    opacity:0.75;
+  }
+  .col-body{padding:8px;display:flex;flex-direction:column;gap:8px;}
+  .empty-col{padding:16px;font-size:12px;color:var(--ink-soft);text-align:center;}
+
+  .card{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-left:4px solid var(--copper);
+    border-radius:3px;
+    padding:10px 12px;
+    font-size:13px;
+  }
+  .card .name{font-weight:700;font-size:14px;}
+  .card .meta{color:var(--ink-soft);font-size:12px;margin-top:2px;line-height:1.5;}
+  .card .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .card .note{margin-top:6px;font-size:12px;color:var(--ink-soft);font-style:italic;}
+  .card .actions{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;}
+  .star{color:var(--amber);}
+
+  /* Status manager */
+  .status-manager{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:14px 16px;
+    margin-bottom:18px;
+  }
+  .status-manager h3{margin:0 0 10px;font-size:13px;text-transform:none;color:var(--ink-soft);font-weight:700;}
+  .status-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:14px;
+    font-size:12.5px;
+    font-weight:600;
+    color:#fff;
+    margin:3px 4px 3px 0;
+  }
+  .status-chip button{
+    background:rgba(255,255,255,0.25);
+    border:none;
+    color:#fff;
+    width:16px;height:16px;
+    padding:0;
+    line-height:1;
+    border-radius:50%;
+    font-size:11px;
+    cursor:pointer;
+  }
+  .add-status-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+  /* Modal */
+  .overlay{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(30,26,22,0.45);
+    align-items:center;justify-content:center;
+    z-index:50;
+    padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--panel);
+    border-radius:6px;
+    padding:22px;
+    width:100%;
+    max-width:440px;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  .modal h2{margin:0 0 14px;font-size:18px;}
+  .field{margin-bottom:12px;display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+  .field input,.field select,.field textarea{width:100%;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+
+  footer.tools{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* Print */
+  @media print{
+    body{background:#fff;}
+    .toolbar,.status-manager,.overlay,footer.tools,.card .actions,.today-stamp{display:none !important;}
+    .wrap{padding:0;max-width:100%;}
+    .ticket-header{border:none;box-shadow:none;}
+    .board{display:block;}
+    .col{border:1px solid #999;margin-bottom:14px;break-inside:avoid;}
+    .card{border-left:3px solid #666;background:#fff;}
+    .stats{border-color:#999;}
+    .stat{border:1px solid #ccc;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ticket-header">
+    <div>
+      <div class="brand-mark">SERVICE DESK · CLIENT TRACKER</div>
+      <h1>Refillon Solutions</h1>
+      <div class="subtitle">Computer &amp; printer repair — job &amp; client board</div>
+    </div>
+    <div class="today-stamp" id="todayStamp"></div>
+  </div>
+
+  <div class="stats" id="statsRow"></div>
+
+  <div class="status-manager">
+    <h3>Statuses (add or remove tags to match how you work)</h3>
+    <div id="statusChips"></div>
+    <div class="add-status-row">
+      <input type="text" id="newStatusName" placeholder="New status name" style="max-width:180px;">
+      <input type="color" id="newStatusColor" value="#8F491F" style="width:44px;padding:2px;">
+      <button class="ghost small" onclick="addStatus()">+ Add status</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search" id="searchBox" placeholder="Search by name, phone, device..." oninput="render()">
+    <select id="monthFilter" onchange="render()">
+      <option value="">All months</option>
+    </select>
+    <select id="yearFilter" onchange="render()">
+      <option value="">All years</option>
+    </select>
+    <button onclick="openModal()">+ New Entry</button>
+    <button class="ghost" onclick="window.print()">🖨 Print / Save as PDF</button>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <footer class="tools">
+    <button class="ghost small" onclick="exportCSV()">Export CSV</button>
+  </footer>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">New Entry</h2>
+    <input type="hidden" id="editId">
+    <div class="field"><label>Client name</label><input type="text" id="f_name"></div>
+    <div class="field"><label>Phone</label><input type="tel" id="f_phone"></div>
+    <div class="field"><label>Device / Item</label><input type="text" id="f_device" placeholder="e.g. HP LaserJet 1020, Dell laptop"></div>
+    <div class="field"><label>Status</label><select id="f_status"></select></div>
+    <div class="field"><label>Date</label><input type="date" id="f_date"></div>
+    <div class="field"><label>Amount (₹, optional)</label><input type="number" id="f_amount"></div>
+    <div class="field"><label>Notes</label><textarea id="f_notes" rows="2"></textarea></div>
+    <div class="field" style="flex-direction:row;align-items:center;gap:8px;">
+      <input type="checkbox" id="f_regular" style="width:auto;">
+      <label style="margin:0;">Mark as Regular Customer ⭐</label>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">Cancel</button>
+      <button onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_STATUSES = [
+  {id:'new_enquiry', name:'New Enquiry', color:'#B8901A', emoji:'🟡'},
+  {id:'quotation_sent', name:'Quotation Sent', color:'#2F5F8A', emoji:'🔵'},
+  {id:'followup', name:'Follow-up Required', color:'#C1662B', emoji:'🟠'},
+  {id:'order_confirmed', name:'Order Confirmed', color:'#3E7D4B', emoji:'🟢'},
+  {id:'service_pending', name:'Service Pending', color:'#6B4C8A', emoji:'🟣'},
+  {id:'completed', name:'Completed', color:'#2E7D5B', emoji:'✅'},
+  {id:'payment_pending', name:'Payment Pending', color:'#B23B30', emoji:'🔴'},
+];
+
+let statuses = [];
+let entries = [];
+
+function uid(){return 'e'+Date.now()+Math.random().toString(36).slice(2,7);}
+
+async function loadData(){
+  try{
+    const [sRes, eRes] = await Promise.all([
+      fetch('/api/statuses'),
+      fetch('/api/clients')
+    ]);
+    statuses = await sRes.json();
+    const rawEntries = await eRes.json();
+    entries = rawEntries.map(e => ({
+      id: e.id, name: e.name, phone: e.phone, device: e.device,
+      status: e.status, date: e.entry_date ? e.entry_date.slice(0,10) : '',
+      amount: e.amount, notes: e.notes, regular: e.regular
+    }));
+  }catch(e){
+    console.error('Failed to load from server', e);
+    statuses = DEFAULT_STATUSES; entries = [];
+  }
+  populateStatusSelect();
+  populateFilters();
+  render();
+}
+
+// statuses/entries are saved individually via API calls at the point of
+// add/edit/delete (see addStatus, removeStatus, saveEntry, deleteEntry below)
+async function saveStatuses(){ /* handled per-action via API */ }
+async function saveEntries(){ /* handled per-action via API */ }
+
+function populateStatusSelect(){
+  const sel = document.getElementById('f_status');
+  sel.innerHTML = statuses.map(s=>`<option value="${s.id}">${s.emoji||''} ${s.name}</option>`).join('');
+}
+
+function renderStatusChips(){
+  const el = document.getElementById('statusChips');
+  el.innerHTML = statuses.map(s=>`
+    <span class="status-chip" style="background:${s.color}">
+      ${s.emoji||''} ${s.name}
+      <button title="Remove" onclick="removeStatus('${s.id}')">×</button>
+    </span>`).join('');
+}
+
+async function addStatus(){
+  const nameInput = document.getElementById('newStatusName');
+  const colorInput = document.getElementById('newStatusColor');
+  const name = nameInput.value.trim();
+  if(!name) return;
+  const id = 'st_'+Date.now();
+  const newStatus = {id, name, color: colorInput.value, emoji:'🔘'};
+  await fetch('/api/statuses', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(newStatus)
+  });
+  statuses.push(newStatus);
+  nameInput.value='';
+  populateStatusSelect();
+  renderStatusChips();
+  render();
+}
+
+async function removeStatus(id){
+  const inUse = entries.some(e=>e.status===id);
+  if(inUse && !confirm('Some entries use this status. Remove it anyway? Those entries will move to "Uncategorized".')) return;
+  await fetch('/api/statuses/'+id, { method:'DELETE' });
+  statuses = statuses.filter(s=>s.id!==id);
+  entries.forEach(e=>{ if(e.status===id) e.status=''; });
+  populateStatusSelect();
+  renderStatusChips();
+  render();
+}
+
+function populateFilters(){
+  const monthSel = document.getElementById('monthFilter');
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  monthSel.innerHTML = '<option value="">All months</option>' + months.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+
+  const years = [...new Set(entries.map(e=> e.date ? new Date(e.date).getFullYear() : null).filter(Boolean))].sort();
+  const yearSel = document.getElementById('yearFilter');
+  const thisYear = new Date().getFullYear();
+  if(!years.includes(thisYear)) years.push(thisYear);
+  yearSel.innerHTML = '<option value="">All years</option>' + years.sort().map(y=>`<option value="${y}">${y}</option>`).join('');
+}
+
+function openModal(entry){
+  document.getElementById('modalTitle').textContent = entry ? 'Edit Entry' : 'New Entry';
+  document.getElementById('editId').value = entry ? entry.id : '';
+  document.getElementById('f_name').value = entry ? entry.name : '';
+  document.getElementById('f_phone').value = entry ? entry.phone : '';
+  document.getElementById('f_device').value = entry ? entry.device : '';
+  document.getElementById('f_status').value = entry ? entry.status : (statuses[0] ? statuses[0].id : '');
+  document.getElementById('f_date').value = entry ? entry.date : new Date().toISOString().slice(0,10);
+  document.getElementById('f_amount').value = entry ? (entry.amount||'') : '';
+  document.getElementById('f_notes').value = entry ? (entry.notes||'') : '';
+  document.getElementById('f_regular').checked = entry ? !!entry.regular : false;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+
+async function saveEntry(){
+  const id = document.getElementById('editId').value;
+  const name = document.getElementById('f_name').value.trim();
+  if(!name){ alert('Client name is required'); return; }
+  const data = {
+    id: id || uid(),
+    name,
+    phone: document.getElementById('f_phone').value.trim(),
+    device: document.getElementById('f_device').value.trim(),
+    status: document.getElementById('f_status').value,
+    date: document.getElementById('f_date').value,
+    amount: document.getElementById('f_amount').value,
+    notes: document.getElementById('f_notes').value.trim(),
+    regular: document.getElementById('f_regular').checked,
+  };
+  if(id){
+    await fetch('/api/clients/'+id, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    entries = entries.map(e=> e.id===id ? data : e);
+  }else{
+    await fetch('/api/clients', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    entries.push(data);
+  }
+  populateFilters();
+  closeModal();
+  render();
+}
+
+async function deleteEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  await fetch('/api/clients/'+id, { method:'DELETE' });
+  entries = entries.filter(e=>e.id!==id);
+  populateFilters();
+  render();
+}
+
+function render(){
+  renderStatusChips();
+  const search = document.getElementById('searchBox').value.toLowerCase();
+  const month = document.getElementById('monthFilter').value;
+  const year = document.getElementById('yearFilter').value;
+
+  let filtered = entries.filter(e=>{
+    const matchesSearch = !search || (e.name+e.phone+e.device).toLowerCase().includes(search);
+    let matchesMonth = true, matchesYear = true;
+    if(e.date){
+      const d = new Date(e.date);
+      if(month!=='') matchesMonth = d.getMonth()===parseInt(month);
+      if(year!=='') matchesYear = d.getFullYear()===parseInt(year);
+    } else {
+      if(month!=='' ) matchesMonth = false;
+      if(year!=='') matchesYear = false;
+    }
+    return matchesSearch && matchesMonth && matchesYear;
+  });
+
+  // Stats
+  const now = new Date();
+  const thisMonthCount = entries.filter(e=>e.date && new Date(e.date).getMonth()===now.getMonth() && new Date(e.date).getFullYear()===now.getFullYear()).length;
+  const thisYearCount = entries.filter(e=>e.date && new Date(e.date).getFullYear()===now.getFullYear()).length;
+  const regularCount = entries.filter(e=>e.regular).length;
+  const paymentPendingCount = entries.filter(e=>e.status==='payment_pending').length;
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><div class="num">${entries.length}</div><div class="lbl">Total entries</div></div>
+    <div class="stat"><div class="num">${thisMonthCount}</div><div class="lbl">This month</div></div>
+    <div class="stat"><div class="num">${thisYearCount}</div><div class="lbl">This year</div></div>
+    <div class="stat"><div class="num">${regularCount}</div><div class="lbl">Regular customers</div></div>
+    <div class="stat"><div class="num">${paymentPendingCount}</div><div class="lbl">Payment pending</div></div>
+  `;
+
+  // Board
+  const board = document.getElementById('board');
+  const cols = [...statuses];
+  if(entries.some(e=>!e.status || !statuses.find(s=>s.id===e.status))){
+    cols.push({id:'', name:'Uncategorized', color:'#8A8377', emoji:''});
+  }
+  board.innerHTML = cols.map(col=>{
+    const colEntries = filtered.filter(e=> (e.status||'') === col.id);
+    return `
+      <div class="col">
+        <div class="col-head" style="background:${col.color}1A; border-bottom-color:${col.color}55;">
+          <span>${col.emoji||''} ${col.name}</span>
+          <span class="count">${colEntries.length}</span>
+        </div>
+        <div class="col-body">
+          ${colEntries.length ? colEntries.map(e=>cardHTML(e)).join('') : `<div class="empty-col">No entries</div>`}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function cardHTML(e){
+  const dateStr = e.date ? new Date(e.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+  return `
+    <div class="card">
+      <div class="name">${escapeHtml(e.name)} ${e.regular?'<span class="star">⭐</span>':''}</div>
+      <div class="meta">
+        ${e.phone ? '📞 '+escapeHtml(e.phone)+'<br>' : ''}
+        ${e.device ? '🖥 '+escapeHtml(e.device)+'<br>' : ''}
+        📅 ${dateStr}${e.amount ? ' · ₹'+escapeHtml(String(e.amount)) : ''}
+      </div>
+      ${e.notes ? `<div class="note">${escapeHtml(e.notes)}</div>` : ''}
+      <div class="actions">
+        <button class="small ghost" onclick='openModal(${JSON.stringify(e).replace(/'/g,"&apos;")})'>Edit</button>
+        <button class="small danger" onclick="deleteEntry('${e.id}')">Delete</button>
+      </div>
+    </div>`;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function exportCSV(){
+  const rows = [['Name','Phone','Device','Status','Date','Amount','Regular Customer','Notes']];
+  entries.forEach(e=>{
+    const st = statuses.find(s=>s.id===e.status);
+    rows.push([e.name,e.phone,e.device, st?st.name:'', e.date, e.amount, e.regular?'Yes':'No', e.notes]);
+  });
+  const csv = rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'refillon-solutions-clients.csv';
+  a.click();
+}
+
+document.getElementById('todayStamp').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+loadData();
+</script>
+</body>
+</html>
